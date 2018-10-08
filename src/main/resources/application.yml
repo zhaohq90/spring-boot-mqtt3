@@ -1,0 +1,7 @@
+spring:
+  mqtt:
+    client-id: mqttId
+    default-topic: hello
+    url: tcp://47.99.114.23:1883
+    username: admin
+    password: password
