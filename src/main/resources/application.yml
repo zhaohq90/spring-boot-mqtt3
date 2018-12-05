@@ -1,7 +1,12 @@
 spring:
   mqtt:
-    client-id: mqttId
-    default-topic: hello
-    url: tcp://47.99.114.23:1883
+    urls:
+      - tcp://193.112.42.141:1883
     username: admin
-    password: password
+    password: public
+    producer-id: producerId
+    consumer-id: consumerId
+    default-topic: hello
+    consumerTopics:
+      - hello
+      - login

@@ -19,55 +19,57 @@ import org.springframework.messaging.MessageHandler;
 @Slf4j
 public class MqttConfig {
 
-    @Autowired
-    private MqttProperties mqttProperties;
+	@Autowired
+	private MqttProperties mqttProperties;
 
-    @Bean
-    @ServiceActivator(inputChannel = "inputChannel")
-    public MessageHandler handler() {
-        return new MqttMessageHandler();
-    }
+	@Bean
+	@ServiceActivator(inputChannel = "inboundChannel")
+	public MessageHandler handler() {
+		return new MqttMessageHandler();
+	}
 
-    @Bean
-    public MqttPahoClientFactory clientFactory() {
-        DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
-        factory.setServerURIs(mqttProperties.getUrl().split(","));
-        factory.setCleanSession(false);
-        factory.setUserName(mqttProperties.getUsername());
-        factory.setPassword(mqttProperties.getPassword());
-        return factory;
-    }
+	@Bean
+	public MqttPahoClientFactory clientFactory() {
+		DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
+		factory.setServerURIs(mqttProperties.getUrls());
+		factory.setCleanSession(false);
+		factory.setUserName(mqttProperties.getUsername());
+		factory.setPassword(mqttProperties.getPassword());
 
-    @Bean
-    public MessageProducer inbound(MqttPahoClientFactory clientFactory) {
-        String[] inboundTopics = new String[]{mqttProperties.getDefaultTopic()};
-        MqttPahoMessageDrivenChannelAdapter adapter = new MqttPahoMessageDrivenChannelAdapter("inboundId", clientFactory, inboundTopics);
-        adapter.setCompletionTimeout(5000);
-        adapter.setConverter(new DefaultPahoMessageConverter());
-        adapter.setQos(1);
-        adapter.setOutputChannel(inputChannel());
+		return factory;
+	}
 
-        return adapter;
-    }
+	@Bean
+	public MessageProducer inbound(MqttPahoClientFactory clientFactory) {
+		String[] inboundTopics = mqttProperties.getConsumerTopics();
+		MqttPahoMessageDrivenChannelAdapter adapter = new MqttPahoMessageDrivenChannelAdapter(mqttProperties.getConsumerId(), clientFactory, inboundTopics);
+		adapter.setCompletionTimeout(5000);
+		adapter.setConverter(new DefaultPahoMessageConverter());
+		adapter.setQos(1);
+		adapter.setOutputChannel(inboundChannel());
 
-    @Bean
-    @ServiceActivator(inputChannel = "outboundChannel")
-    public MessageHandler outbound() {
-        MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler("outboundId", clientFactory());
-        messageHandler.setAsync(true);
-        messageHandler.setDefaultTopic(mqttProperties.getDefaultTopic());
+		return adapter;
+	}
 
-        return messageHandler;
-    }
+	@Bean
+	public MessageChannel inboundChannel() {
+		return new DirectChannel();
+	}
 
-    @Bean
-    public MessageChannel inputChannel() {
-        return new DirectChannel();
-    }
+	@Bean
+	@ServiceActivator(inputChannel = "outboundChannel")
+	public MessageHandler outbound(MqttPahoClientFactory clientFactory) {
+		//MQTT出站通道适配器的抽象类的实现,用于推送消息
+		MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler(mqttProperties.getProducerId(), clientFactory);
+		messageHandler.setAsync(true);
+		messageHandler.setDefaultTopic(mqttProperties.getDefaultTopic());
 
-    @Bean
-    public MessageChannel outboundChannel() {
-        return new DirectChannel();
-    }
+		return messageHandler;
+	}
+
+	@Bean
+	public MessageChannel outboundChannel() {
+		return new DirectChannel();
+	}
 
 }

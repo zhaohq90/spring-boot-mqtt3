@@ -11,8 +11,10 @@ public class MqttProperties {
 
     private String username;
     private String password;
-    private String url;
-    private String clientId;
+    private String[] urls;
+    private String producerId;
+	private String consumerId;
     private String defaultTopic;
+    private String[] consumerTopics;
 
 }
