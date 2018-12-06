@@ -48,6 +48,10 @@ public class MqttConfig {
 		adapter.setQos(1);
 		adapter.setOutputChannel(inboundChannel());
 
+		//动态添加/移除topic订阅
+		//adapter.addTopic("sys/user");
+		//adapter.removeTopic("sys/user");
+
 		return adapter;
 	}
 
